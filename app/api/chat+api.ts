@@ -25,13 +25,12 @@ const GEMINI_MODELS = [
 ];
 
 function resolveGeminiModel(requestedModel?: string): string[] {
-  // Use the newest Google Gemini endpoints, falling back to older ones
-  return [
-    "gemini-3.8-flash", 
-    "gemini-3.5-flash", 
-    "gemini-3.1-pro-preview", 
-    "gemini-1.5-flash"
-  ];
+  // Prioritize the requested model, falling back to the fastest stable models
+  const defaultModels = ["gemini-1.5-flash", "gemini-1.5-pro"];
+  if (requestedModel) {
+    return [requestedModel, ...defaultModels];
+  }
+  return defaultModels;
 }
 
 export async function POST(request: Request): Promise<Response> {

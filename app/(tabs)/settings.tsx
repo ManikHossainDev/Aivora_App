@@ -3,6 +3,7 @@ import {
   Alert,
   Modal,
   Platform,
+  RefreshControl,
   ScrollView,
   Switch,
   Text,
@@ -28,6 +29,14 @@ interface StorageDiagnostics {
 export default function SettingsScreen() {
   const selectedModel = useModelStore((state) => state.selectedModel);
   const [autoSpeak, setAutoSpeak] = useState(true);
+  const [refreshing, setRefreshing] = useState(false);
+
+  const onRefresh = React.useCallback(() => {
+    setRefreshing(true);
+    setTimeout(() => {
+      setRefreshing(false);
+    }, 1200);
+  }, []);
 
   // Storage Inspector Modal State
   const [storageModalVisible, setStorageModalVisible] = useState(false);
@@ -128,7 +137,11 @@ export default function SettingsScreen() {
       {/* Top Universal Header with Model Selector */}
       <AivoraHeader />
 
-      <ScrollView className="flex-1 px-4 py-3.5" showsVerticalScrollIndicator={false}>
+      <ScrollView 
+        className="flex-1 px-4 py-3.5" 
+        showsVerticalScrollIndicator={false}
+        refreshControl={<RefreshControl refreshing={refreshing} onRefresh={onRefresh} colors={["#2563eb"]} />}
+      >
         {/* Page Title Header */}
         <View className="mb-4">
           <Text className="text-xl font-bold tracking-tight text-slate-900">Settings</Text>

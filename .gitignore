@@ -14,8 +14,6 @@ expo-env.d.ts
 *.orig.*
 
 # Secrets and local environment
-.env
-.env.*
 !.env.example
 *.pem
 *.key
@@ -45,3 +43,4 @@ Thumbs.db
 # Metro
 .metro-health-check*
 node_modules/
+config.bat
