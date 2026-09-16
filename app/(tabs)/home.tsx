@@ -6,6 +6,7 @@ import {
   Keyboard,
   KeyboardAvoidingView,
   Platform,
+  RefreshControl,
   ScrollView,
   Text,
   TextInput,
@@ -63,6 +64,7 @@ export default function HomeScreen() {
   const [likedIds, setLikedIds] = useState<Record<string, "like" | "dislike">>({});
   const [showScrollBottom, setShowScrollBottom] = useState(false);
   const [keyboardHeight, setKeyboardHeight] = useState(0);
+  const [refreshing, setRefreshing] = useState(false);
 
   // Message Inline Editing State
   const [editingMessageId, setEditingMessageId] = useState<string | null>(null);
@@ -261,6 +263,14 @@ export default function HomeScreen() {
     if (!timestamp) return "";
     const date = new Date(timestamp);
     return date.toLocaleTimeString([], { hour: "2-digit", minute: "2-digit" });
+  }, []);
+
+  const onRefresh = useCallback(() => {
+    setRefreshing(true);
+    // Simulate refresh or re-fetch data if needed
+    setTimeout(() => {
+      setRefreshing(false);
+    }, 1200);
   }, []);
 
   // Render WhatsApp Voice Note or Standard Text Message
@@ -509,6 +519,7 @@ export default function HomeScreen() {
               keyboardShouldPersistTaps="handled"
               keyboardDismissMode="on-drag"
               contentContainerStyle={{ flexGrow: 1, justifyContent: "center", paddingVertical: 20 }}
+              refreshControl={<RefreshControl refreshing={refreshing} onRefresh={onRefresh} colors={["#2563eb"]} />}
             >
               {/* Gemini Hero Greeting */}
               <View className="mb-6">
@@ -561,6 +572,7 @@ export default function HomeScreen() {
               maxToRenderPerBatch={10}
               windowSize={7}
               removeClippedSubviews={Platform.OS === "android"}
+              refreshControl={<RefreshControl refreshing={refreshing} onRefresh={onRefresh} colors={["#2563eb"]} />}
               onScroll={(e) => {
                 const offsetY = e.nativeEvent.contentOffset.y;
                 const contentHeight = e.nativeEvent.contentSize.height;
