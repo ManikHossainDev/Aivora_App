@@ -62,6 +62,7 @@ export default function HomeScreen() {
   const [copiedId, setCopiedId] = useState<string | null>(null);
   const [likedIds, setLikedIds] = useState<Record<string, "like" | "dislike">>({});
   const [showScrollBottom, setShowScrollBottom] = useState(false);
+  const [keyboardHeight, setKeyboardHeight] = useState(0);
 
   // Message Inline Editing State
   const [editingMessageId, setEditingMessageId] = useState<string | null>(null);
@@ -181,17 +182,27 @@ export default function HomeScreen() {
     }
   }, [messages, status]);
 
-  // Keyboard listener
+  // Keyboard listener for auto-scroll & offset tracking
   useEffect(() => {
     const showEvent = Platform.OS === "ios" ? "keyboardWillShow" : "keyboardDidShow";
-    const showSub = Keyboard.addListener(showEvent, () => {
+    const hideEvent = Platform.OS === "ios" ? "keyboardWillHide" : "keyboardDidHide";
+
+    const showSub = Keyboard.addListener(showEvent, (e) => {
+      const keyboardH = e.endCoordinates?.height || 0;
+      setKeyboardHeight(keyboardH);
+      
       setTimeout(() => {
         flatListRef.current?.scrollToEnd({ animated: true });
       }, 150);
     });
 
+    const hideSub = Keyboard.addListener(hideEvent, () => {
+      setKeyboardHeight(0);
+    });
+
     return () => {
       showSub.remove();
+      hideSub.remove();
     };
   }, []);
 
@@ -319,15 +330,14 @@ export default function HomeScreen() {
                 </View>
               </View>
             ) : (
-              <View className="flex-row items-start justify-between">
+              <View className="flex-row items-end">
                 <Text
                   selectable
-                  className="flex-1 text-base leading-6 text-slate-900"
+                  className="text-base leading-6 text-slate-900 mr-2"
                   style={{ flexShrink: 1 }}
                 >
                   {item.text}
                 </Text>
-
                 <TouchableOpacity
                   onPress={() => handleStartEdit(item)}
                   className="ml-2 p-1 opacity-70 active:opacity-100"
@@ -471,7 +481,7 @@ export default function HomeScreen() {
   return (
     <SafeAreaView edges={["top"]} className="flex-1 bg-white">
       <KeyboardAvoidingView
-        behavior={Platform.OS === "ios" ? "padding" : undefined}
+        behavior="padding"
         keyboardVerticalOffset={Platform.OS === "ios" ? 10 : 0}
         className="flex-1"
       >
@@ -491,7 +501,7 @@ export default function HomeScreen() {
           </View>
         ) : null}
 
-        {/* Conversation List & Gemini Welcome Hero (Smooth Native Scroll Enabled) */}
+        {/* Conversation List & Gemini Welcome Hero */}
         <View className="flex-1 px-4">
           {messages.length === 0 ? (
             <ScrollView
@@ -513,7 +523,7 @@ export default function HomeScreen() {
                 </Text>
               </View>
 
-              {/* Gemini 2x2 Suggestion Cards Grid */}
+              {/* Gemini Suggestion Cards Grid */}
               <View className="gap-2.5">
                 {SUGGESTION_PROMPTS.map((prompt, idx) => (
                   <TouchableOpacity
@@ -546,7 +556,7 @@ export default function HomeScreen() {
               renderItem={renderMessageItem}
               keyboardShouldPersistTaps="handled"
               keyboardDismissMode="on-drag"
-              contentContainerStyle={{ paddingVertical: 12, paddingBottom: 24 }}
+              contentContainerStyle={{ paddingVertical: 12, paddingBottom: 8 }}
               initialNumToRender={15}
               maxToRenderPerBatch={10}
               windowSize={7}
@@ -628,8 +638,8 @@ export default function HomeScreen() {
           </View>
         )}
 
-        {/* Gemini-Style Floating Pill Chatbox Input Bar */}
-        <View className="px-4 pb-3 pt-1">
+        {/* Gemini-Style Floating Pill Chatbox Input Bar - STAYS ABOVE KEYBOARD */}
+        <View className="px-4 pb-3 pt-1" style={{ marginBottom: Platform.OS === "android" ? 0 : 0 }}>
           <View className="flex-row items-end rounded-[28px] bg-[#f0f4f9] px-4 py-2 shadow-sm">
             {/* Expandable Text Input */}
             <TextInput

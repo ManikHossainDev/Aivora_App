@@ -11,15 +11,27 @@ interface RequestPayload {
 
 // Valid Google Gemini models with ultra-fast latency
 const GEMINI_MODELS = [
-  "gemini-2.0-flash",
+  "gemini-3.8-flash",
+  "gemini-3.8-live",
+  "gemini-3.8-live-extended-thinking",
+  "gemini-3.7-flash",
+  "gemini-3.6-flash",
+  "gemini-3.5-flash",
+  "gemini-3.5-flash-lite",
+  "gemini-3.1-pro-preview",
+  "gemini-omni-1.1-flash",
   "gemini-1.5-flash",
-  "gemini-1.5-flash-8b",
+  "gemini-1.5-pro",
 ];
 
 function resolveGeminiModel(requestedModel?: string): string[] {
-  // Map internal Aivora model IDs to the fastest Google Gemini endpoints
-  const primaryModel = "gemini-2.0-flash";
-  return [primaryModel, "gemini-1.5-flash", "gemini-1.5-flash-8b"];
+  // Use the newest Google Gemini endpoints, falling back to older ones
+  return [
+    "gemini-3.8-flash", 
+    "gemini-3.5-flash", 
+    "gemini-3.1-pro-preview", 
+    "gemini-1.5-flash"
+  ];
 }
 
 export async function POST(request: Request): Promise<Response> {
