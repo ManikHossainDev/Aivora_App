@@ -21,7 +21,7 @@ export default function AssistantHubScreen() {
       iconBg: "bg-blue-50",
       iconColor: "#2563eb",
       title: "Active Intelligence Core",
-      desc: `Powered by ${selectedModel.displayName} for ultra-fast reasoning.`,
+      desc: `Powered by ${selectedModel.displayName} for high-speed conversational reasoning.`,
     },
     {
       icon: "volume-high-outline",
@@ -34,14 +34,14 @@ export default function AssistantHubScreen() {
       icon: "shield-checkmark-outline",
       iconBg: "bg-amber-50",
       iconColor: "#d97706",
-      title: "Local On-Device Storage",
-      desc: "Your conversation history is securely kept on your device storage.",
+      title: "Local Storage Privacy",
+      desc: "Your conversation history is securely saved directly on your device storage.",
     },
   ];
 
   const systemSpecs = [
     { label: "Active AI Engine", value: selectedModel.displayName },
-    { label: "Engine Latency Profile", value: selectedModel.badge },
+    { label: "Latency Profile", value: selectedModel.badge },
     { label: "Voice Synthesis", value: "Active & Ready" },
     { label: "Speech Recognition", value: "Multilingual Engine" },
     { label: "Data Storage", value: "Local Storage" },
@@ -53,62 +53,62 @@ export default function AssistantHubScreen() {
       {/* Top Universal Header with Model Selector */}
       <AivoraHeader />
 
-      <ScrollView className="flex-1 px-5 py-4" showsVerticalScrollIndicator={false}>
+      <ScrollView className="flex-1 px-4 py-3.5" showsVerticalScrollIndicator={false}>
         {/* Page Title Header */}
-        <View className="mb-5">
-          <Text className="text-2xl font-bold tracking-tight text-slate-900">Assistant Hub</Text>
+        <View className="mb-4">
+          <Text className="text-xl font-bold tracking-tight text-slate-900">Assistant Hub</Text>
           <Text className="mt-0.5 text-xs text-slate-500">
-            Aivora intelligent capabilities & system overview
+            Aivora intelligence capabilities & system overview
           </Text>
         </View>
 
         {/* Hero AI Status Card */}
-        <View className="mb-6 overflow-hidden rounded-3xl border border-slate-200 bg-white p-6 shadow-sm">
+        <View className="mb-5 overflow-hidden rounded-2xl border border-slate-200 bg-white p-4 shadow-sm">
           <View className="flex-row items-center justify-between">
             <View className="flex-row items-center">
-              <View className="mr-3.5 h-14 w-14 items-center justify-center rounded-2xl bg-blue-600 shadow-md">
-                <Ionicons name="sparkles" size={28} color="#ffffff" />
+              <View className="mr-3 h-11 w-11 items-center justify-center rounded-xl bg-blue-600 shadow-sm">
+                <Ionicons name="sparkles" size={22} color="#ffffff" />
               </View>
               <View>
-                <Text className="text-xl font-bold text-slate-900">Aivora AI</Text>
+                <Text className="text-base font-bold text-slate-900">Aivora AI</Text>
                 <Text className="text-xs font-semibold text-blue-600">
                   {selectedModel.displayName}
                 </Text>
               </View>
             </View>
 
-            <View className="flex-row items-center rounded-full bg-emerald-50 px-3 py-1.5">
+            <View className="flex-row items-center rounded-full bg-emerald-50 px-2.5 py-1">
               <View className="mr-1.5 h-2 w-2 rounded-full bg-emerald-500" />
-              <Text className="text-xs font-bold text-emerald-700">Online</Text>
+              <Text className="text-[11px] font-bold text-emerald-700">Online</Text>
             </View>
           </View>
 
-          <View className="mt-5 rounded-2xl bg-slate-50 p-3.5">
+          <View className="mt-3.5 rounded-xl bg-slate-50 p-3">
             <Text className="text-xs leading-5 text-slate-600">
-              Aivora is your next-generation conversational AI voice assistant, engineered for fast reasoning, real-time voice synthesis, and seamless productivity.
+              Aivora is your next-generation conversational voice assistant, engineered for fast reasoning, natural voice synthesis, and seamless productivity.
             </Text>
           </View>
         </View>
 
         {/* AI Capabilities Section */}
-        <View className="mb-6">
-          <Text className="mb-3 text-xs font-semibold uppercase tracking-wider text-slate-400">
+        <View className="mb-5">
+          <Text className="mb-2.5 text-[11px] font-bold uppercase tracking-wider text-slate-400">
             Core Capabilities
           </Text>
-          <View className="gap-3">
+          <View className="gap-2.5">
             {capabilities.map((cap, index) => (
               <View
                 key={index}
-                className="flex-row items-center rounded-2xl border border-slate-200 bg-white p-4 shadow-sm"
+                className="flex-row items-center rounded-xl border border-slate-200 bg-white p-3.5 shadow-sm"
               >
                 <View
-                  className={`mr-3.5 h-11 w-11 items-center justify-center rounded-xl ${cap.iconBg}`}
+                  className={`mr-3 h-10 w-10 items-center justify-center rounded-xl ${cap.iconBg}`}
                 >
-                  <Ionicons name={cap.icon as any} size={22} color={cap.iconColor} />
+                  <Ionicons name={cap.icon as any} size={20} color={cap.iconColor} />
                 </View>
-                <View className="flex-1 pr-2">
-                  <Text className="text-sm font-bold text-slate-800">{cap.title}</Text>
-                  <Text className="mt-0.5 text-xs text-slate-500">{cap.desc}</Text>
+                <View className="flex-1 pr-1">
+                  <Text className="text-xs font-bold text-slate-800">{cap.title}</Text>
+                  <Text className="mt-0.5 text-[11px] leading-4 text-slate-500">{cap.desc}</Text>
                 </View>
               </View>
             ))}
@@ -117,19 +117,17 @@ export default function AssistantHubScreen() {
 
         {/* System Specifications & Diagnostics */}
         <View className="mb-8">
-          <Text className="mb-3 text-xs font-semibold uppercase tracking-wider text-slate-400">
+          <Text className="mb-2.5 text-[11px] font-bold uppercase tracking-wider text-slate-400">
             System Specifications
           </Text>
-          <View className="overflow-hidden rounded-2xl border border-slate-200 bg-white shadow-sm">
+          <View className="overflow-hidden rounded-2xl bg-white p-2 shadow-sm">
             {systemSpecs.map((spec, index) => (
               <View
                 key={index}
-                className={`flex-row items-center justify-between p-4 ${
-                  index !== systemSpecs.length - 1 ? "border-b border-slate-100" : ""
-                }`}
+                className="flex-row items-center justify-between px-3 py-2.5"
               >
                 <Text className="text-xs font-medium text-slate-500">{spec.label}</Text>
-                <Text className="text-xs font-bold text-slate-800">{spec.value}</Text>
+                <Text className="text-xs font-semibold text-slate-800">{spec.value}</Text>
               </View>
             ))}
           </View>

@@ -477,10 +477,10 @@ export default function HomeScreen() {
           </TouchableOpacity>
         )}
 
-        {/* Dedicated Live Voice Graph Waveform Animation (Centered, No Dot or Done Button) */}
+        {/* Dedicated Live Voice Graph Waveform Animation (Seamless, Transparent, No Background Box) */}
         {(status === "listening" || status === "speaking") && (
-          <View className="mx-4 mb-2 overflow-hidden rounded-2xl border border-slate-200 bg-white px-5 py-3.5 shadow-md">
-            <View className="relative flex-row items-center justify-center">
+          <View className="mx-4 mb-2 items-center justify-center py-2">
+            <View className="relative w-full flex-row items-center justify-center">
               {/* 8-Bar Waveform Frequency Visualizer Graph */}
               <View className="flex-row items-center justify-center gap-1.5 py-1">
                 {[barAnim1, barAnim2, barAnim3, barAnim4, barAnim5, barAnim6, barAnim7, barAnim8].map(
@@ -489,7 +489,7 @@ export default function HomeScreen() {
                       key={i}
                       style={{
                         transform: [{ scaleY: anim }],
-                        height: 26,
+                        height: 28,
                         width: 4,
                         borderRadius: 3,
                         backgroundColor: waveBarColor,
@@ -502,17 +502,17 @@ export default function HomeScreen() {
               {status === "speaking" && (
                 <TouchableOpacity
                   onPress={stopSpeaking}
-                  className="absolute right-0 flex-row items-center rounded-full bg-slate-100 px-3 py-1 active:bg-slate-200"
+                  className="absolute right-2 flex-row items-center rounded-full bg-slate-200/80 px-2.5 py-1 active:bg-slate-300"
                 >
-                  <Ionicons name="stop-circle" size={14} color="#64748b" />
-                  <Text className="ml-1 text-xs font-medium text-slate-700">Stop</Text>
+                  <Ionicons name="stop-circle" size={14} color="#475569" />
+                  <Text className="ml-1 text-[11px] font-semibold text-slate-700">Stop</Text>
                 </TouchableOpacity>
               )}
             </View>
 
             {/* If user actual speech is recognized in real-time, show it cleanly */}
             {transcript && transcript.trim().length > 0 ? (
-              <Text className="mt-2 text-center text-sm font-medium italic text-slate-800">
+              <Text className="mt-1 text-center text-xs font-medium italic text-slate-700">
                 "{transcript}"
               </Text>
             ) : null}
@@ -520,7 +520,7 @@ export default function HomeScreen() {
         )}
 
         {/* Bottom Responsive Input & Controls Section */}
-        <View className="border-t border-slate-200 bg-white px-4 py-3 shadow-sm">
+        <View className="bg-white px-4 py-3 shadow-sm">
           <View className="flex-row items-end justify-between">
             {/* Multi-line Expandable Input Box */}
             <View className="mr-3 flex-1 flex-row items-end rounded-2xl border border-slate-300 bg-slate-50 px-3.5 py-2">

@@ -19,18 +19,18 @@ export function AivoraHeader({ subtitle }: AivoraHeaderProps) {
 
   return (
     <>
-      <View className="flex-row items-center justify-between border-b border-slate-200 bg-white px-5 py-3.5 shadow-sm">
+      <View className="flex-row items-center justify-between bg-white px-4 py-3 shadow-sm">
         {/* Left: Branding */}
         <View className="flex-row items-center">
-          <View className="mr-3 h-10 w-10 items-center justify-center rounded-full bg-blue-600 shadow-sm">
-            <Ionicons name="sparkles" size={20} color="#ffffff" />
+          <View className="mr-2.5 h-9 w-9 items-center justify-center rounded-xl bg-blue-600 shadow-sm">
+            <Ionicons name="sparkles" size={18} color="#ffffff" />
           </View>
           <View>
             <View className="flex-row items-center">
-              <Text className="text-xl font-bold tracking-tight text-slate-900">Aivora</Text>
-              <View className="ml-2 h-2 w-2 rounded-full bg-emerald-500" />
+              <Text className="text-lg font-bold tracking-tight text-slate-900">Aivora</Text>
+              <View className="ml-1.5 h-2 w-2 rounded-full bg-emerald-500" />
             </View>
-            <Text className="text-xs font-medium text-slate-500">
+            <Text className="text-[11px] font-medium text-slate-500">
               {subtitle || selectedModel.displayName}
             </Text>
           </View>
@@ -39,14 +39,14 @@ export function AivoraHeader({ subtitle }: AivoraHeaderProps) {
         {/* Right: Interactive Model Version Selector Pill */}
         <TouchableOpacity
           onPress={() => setModalVisible(true)}
-          className="flex-row items-center rounded-full border border-blue-200 bg-blue-50/80 px-3 py-1.5 active:bg-blue-100"
+          className="h-9 flex-row items-center justify-center rounded-xl border border-blue-200 bg-blue-50/90 px-3 shadow-sm active:bg-blue-100"
           hitSlop={{ top: 6, bottom: 6, left: 6, right: 6 }}
         >
-          <Ionicons name="hardware-chip-outline" size={13} color="#2563eb" />
+          <Ionicons name="hardware-chip-outline" size={15} color="#2563eb" />
           <Text className="mx-1.5 text-xs font-bold text-blue-700">
             {selectedModel.shortName}
           </Text>
-          <Ionicons name="chevron-down" size={12} color="#2563eb" />
+          <Ionicons name="chevron-down" size={13} color="#2563eb" />
         </TouchableOpacity>
       </View>
 
@@ -60,56 +60,56 @@ export function AivoraHeader({ subtitle }: AivoraHeaderProps) {
         <TouchableWithoutFeedback onPress={() => setModalVisible(false)}>
           <View className="flex-1 items-center justify-center bg-black/40 px-5">
             <TouchableWithoutFeedback>
-              <View className="w-full max-w-sm overflow-hidden rounded-3xl border border-slate-200 bg-white p-5 shadow-2xl">
+              <View className="w-full max-w-sm overflow-hidden rounded-2xl border border-slate-200 bg-white p-4 shadow-2xl">
                 {/* Modal Header */}
                 <View className="flex-row items-center justify-between pb-3 border-b border-slate-100">
                   <View className="flex-row items-center">
-                    <View className="mr-2.5 h-8 w-8 items-center justify-center rounded-xl bg-blue-50">
-                      <Ionicons name="hardware-chip" size={16} color="#2563eb" />
+                    <View className="mr-2.5 h-7 w-7 items-center justify-center rounded-lg bg-blue-50">
+                      <Ionicons name="hardware-chip" size={15} color="#2563eb" />
                     </View>
                     <View>
-                      <Text className="text-base font-bold text-slate-900">Select AI Version</Text>
-                      <Text className="text-[11px] text-slate-500">Switch Aivora intelligence engine</Text>
+                      <Text className="text-sm font-bold text-slate-900">Select AI Version</Text>
+                      <Text className="text-[10px] text-slate-500">Switch Aivora intelligence engine</Text>
                     </View>
                   </View>
                   <TouchableOpacity
                     onPress={() => setModalVisible(false)}
                     className="p-1 rounded-full active:bg-slate-100"
                   >
-                    <Ionicons name="close" size={20} color="#64748b" />
+                    <Ionicons name="close" size={18} color="#64748b" />
                   </TouchableOpacity>
                 </View>
 
                 {/* Model Options List */}
-                <View className="mt-3 gap-2.5">
+                <View className="mt-3 gap-2">
                   {AIVORA_MODELS.map((model) => {
                     const isSelected = selectedModel.id === model.id;
                     return (
                       <TouchableOpacity
                         key={model.id}
                         onPress={() => handleSelectModel(model)}
-                        className={`flex-row items-center justify-between rounded-2xl border p-3.5 ${
+                        className={`flex-row items-center justify-between rounded-xl border p-3 ${
                           isSelected
                             ? "border-blue-600 bg-blue-50/60"
                             : "border-slate-200 bg-white active:bg-slate-50"
                         }`}
                       >
-                        <View className="flex-1 pr-3">
+                        <View className="flex-1 pr-2">
                           <View className="flex-row items-center mb-0.5">
                             <Text
-                              className={`text-sm font-bold ${
+                              className={`text-xs font-bold ${
                                 isSelected ? "text-blue-700" : "text-slate-900"
                               }`}
                             >
                               {model.displayName}
                             </Text>
                             <View
-                              className={`ml-2 rounded-full px-2 py-0.5 ${
+                              className={`ml-1.5 rounded-full px-1.5 py-0.5 ${
                                 isSelected ? "bg-blue-200/70" : "bg-slate-100"
                               }`}
                             >
                               <Text
-                                className={`text-[10px] font-semibold ${
+                                className={`text-[9px] font-semibold ${
                                   isSelected ? "text-blue-800" : "text-slate-600"
                                 }`}
                               >
@@ -117,17 +117,17 @@ export function AivoraHeader({ subtitle }: AivoraHeaderProps) {
                               </Text>
                             </View>
                           </View>
-                          <Text className="text-xs text-slate-500">{model.description}</Text>
+                          <Text className="text-[11px] text-slate-500 leading-4">{model.description}</Text>
                         </View>
 
                         <View
-                          className={`h-5 w-5 items-center justify-center rounded-full border ${
+                          className={`h-4 w-4 items-center justify-center rounded-full border ${
                             isSelected
                               ? "border-blue-600 bg-blue-600"
                               : "border-slate-300 bg-white"
                           }`}
                         >
-                          {isSelected && <Ionicons name="checkmark" size={13} color="#ffffff" />}
+                          {isSelected && <Ionicons name="checkmark" size={11} color="#ffffff" />}
                         </View>
                       </TouchableOpacity>
                     );
