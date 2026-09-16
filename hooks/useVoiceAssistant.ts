@@ -59,6 +59,19 @@ export interface UseVoiceAssistantOptions {
   autoSpeak?: boolean;
 }
 
+export function formatDuration(seconds: number): string {
+  const m = Math.floor(seconds / 60);
+  const s = Math.floor(seconds % 60);
+  return `${m}:${s < 10 ? "0" : ""}${s}`;
+}
+
+export function estimateDurationSeconds(text: string): number {
+  if (!text) return 3;
+  const words = text.trim().split(/\s+/).length;
+  const seconds = Math.max(2, Math.round(words / 2.6));
+  return Math.min(seconds, 300);
+}
+
 export interface UseVoiceAssistantReturn {
   // States
   status: VoiceChatStatus;
@@ -69,15 +82,23 @@ export interface UseVoiceAssistantReturn {
   errorType: VoiceChatErrorType | null;
   isSTTSupported: boolean;
   isTTSSupported: boolean;
+  currentlyPlayingId: string | null;
+  playbackProgress: number;
+  playbackElapsedSeconds: number;
 
   // Actions
   setLanguage: (lang: SupportedLanguage) => void;
   startListening: () => Promise<void>;
   stopListening: () => Promise<void>;
   toggleListening: () => Promise<void>;
-  speak: (text?: string) => Promise<void>;
+  speak: (text?: string, messageId?: string) => Promise<void>;
   stopSpeaking: () => Promise<void>;
-  sendMessage: (customText?: string) => Promise<void>;
+  sendMessage: (
+    customText?: string,
+    audioPayload?: { base64: string; mimeType: string },
+    isVoice?: boolean,
+    replyTo?: { id: string; role: "user" | "assistant"; text: string }
+  ) => Promise<void>;
   editMessageAndResend: (messageId: string, newText: string) => Promise<void>;
   clearHistory: () => void;
   resetError: () => void;
@@ -97,6 +118,12 @@ export function useVoiceAssistant(
 
   const [isSTTSupported, setIsSTTSupported] = useState<boolean>(true);
   const [isTTSSupported, setIsTTSSupported] = useState<boolean>(true);
+
+  // Audio Playback Tracking State
+  const [currentlyPlayingId, setCurrentlyPlayingId] = useState<string | null>(null);
+  const [playbackElapsedSeconds, setPlaybackElapsedSeconds] = useState<number>(0);
+  const [playbackProgress, setPlaybackProgress] = useState<number>(0);
+  const playbackTimerRef = useRef<any>(null);
 
   // References
   const recognitionRef = useRef<ISpeechRecognition | null>(null);
@@ -182,6 +209,14 @@ export function useVoiceAssistant(
 
   // 2. Text-to-Speech (TTS)
   const stopSpeaking = useCallback(async () => {
+    if (playbackTimerRef.current) {
+      clearInterval(playbackTimerRef.current);
+      playbackTimerRef.current = null;
+    }
+    setCurrentlyPlayingId(null);
+    setPlaybackProgress(0);
+    setPlaybackElapsedSeconds(0);
+
     try {
       const Speech = getSpeechModule();
       if (Speech && typeof Speech.stop === "function") {
@@ -196,11 +231,13 @@ export function useVoiceAssistant(
   }, []);
 
   const speak = useCallback(
-    async (textToSpeak?: string) => {
+    async (textToSpeak?: string, messageId?: string) => {
       let content = textToSpeak;
+      let targetId = messageId;
       if (!content) {
         const lastMsg = [...messagesRef.current].reverse().find((m) => m.role === "assistant");
         content = lastMsg?.text;
+        if (!targetId && lastMsg) targetId = lastMsg.id;
       }
 
       if (!content || !content.trim()) return;
@@ -208,9 +245,17 @@ export function useVoiceAssistant(
       try {
         await stopSpeaking();
         setStatus("speaking");
+        setCurrentlyPlayingId(targetId || "active_audio");
 
         const isBangla = languageRef.current.startsWith("bn");
         const langCode = isBangla ? "bn-BD" : "en-US";
+
+        const handleFinish = () => {
+          setCurrentlyPlayingId(null);
+          setPlaybackElapsedSeconds(0);
+          setPlaybackProgress(0);
+          setStatus("idle");
+        };
 
         const Speech = getSpeechModule();
         if (Speech && typeof Speech.speak === "function") {
@@ -219,9 +264,9 @@ export function useVoiceAssistant(
             language: langCode,
             pitch: 1.0,
             rate: 1.0,
-            onDone: () => setStatus("idle"),
-            onStopped: () => setStatus("idle"),
-            onError: () => setStatus("idle"),
+            onDone: handleFinish,
+            onStopped: handleFinish,
+            onError: handleFinish,
           });
         } else if (typeof window !== "undefined" && window.speechSynthesis) {
           // Web Browser TTS
@@ -240,14 +285,19 @@ export function useVoiceAssistant(
           }
 
           utterance.onstart = () => setStatus("speaking");
-          utterance.onend = () => setStatus("idle");
-          utterance.onerror = () => setStatus("idle");
+          utterance.onend = handleFinish;
+          utterance.onerror = handleFinish;
 
           window.speechSynthesis.speak(utterance);
         } else {
-          setStatus("idle");
+          handleFinish();
         }
       } catch {
+        if (playbackTimerRef.current) {
+          clearInterval(playbackTimerRef.current);
+          playbackTimerRef.current = null;
+        }
+        setCurrentlyPlayingId(null);
         setStatus("idle");
       }
     },
@@ -256,7 +306,13 @@ export function useVoiceAssistant(
 
   // 3. Send Message to Gemini AI
   const sendMessage = useCallback(
-    async (customText?: string, audioPayload?: { base64: string; mimeType: string }) => {
+    async (
+      customText?: string,
+      audioPayload?: { base64: string; mimeType: string },
+      isVoice = false,
+      replyTo?: { id: string; role: "user" | "assistant"; text: string }
+    ) => {
+      const isVoiceInput = isVoice || Boolean(audioPayload?.base64);
       const text = customText !== undefined ? customText.trim() : latestTranscriptRef.current.trim();
       const hasAudio = Boolean(audioPayload?.base64);
 
@@ -267,12 +323,20 @@ export function useVoiceAssistant(
 
       await stopSpeaking();
 
-      if (text) {
+      const userVoiceId = `${Date.now()}-user`;
+      const initialText = text || (hasAudio ? "Voice note" : "");
+
+      if (initialText) {
+        const userDur = estimateDurationSeconds(initialText);
         const userMessage: ChatMessage = {
-          id: `${Date.now()}-user`,
+          id: userVoiceId,
           role: "user",
-          text,
+          text: initialText,
           timestamp: Date.now(),
+          isVoice: isVoiceInput,
+          audioDurationSeconds: userDur,
+          audioDuration: formatDuration(userDur),
+          replyTo,
         };
         const updatedHistory = [...messagesRef.current, userMessage];
         saveMessages(updatedHistory);
@@ -294,30 +358,41 @@ export function useVoiceAssistant(
           language: languageRef.current,
         });
 
-        let updatedHistory = messagesRef.current;
-        if (hasAudio && response.transcript) {
-          const userMessage: ChatMessage = {
-            id: `${Date.now()}-user`,
-            role: "user",
-            text: response.transcript,
-            timestamp: Date.now(),
-          };
-          updatedHistory = [...updatedHistory, userMessage];
-          setTranscript(response.transcript);
+        let currentHistory = messagesRef.current;
+        if (hasAudio && response.transcript && response.transcript.trim()) {
+          const formattedTranscript = response.transcript.trim();
+          const userDur = estimateDurationSeconds(formattedTranscript);
+          currentHistory = currentHistory.map((m) =>
+            m.id === userVoiceId
+              ? {
+                  ...m,
+                  text: formattedTranscript,
+                  audioDurationSeconds: userDur,
+                  audioDuration: formatDuration(userDur),
+                }
+              : m
+          );
+          setTranscript(formattedTranscript);
         }
 
+        const assistantDur = estimateDurationSeconds(response.reply);
+        const assistantId = `${Date.now()}-assistant`;
         const assistantMessage: ChatMessage = {
-          id: `${Date.now()}-assistant`,
+          id: assistantId,
           role: "assistant",
           text: response.reply,
           timestamp: Date.now(),
+          isVoice: isVoiceInput,
+          audioDurationSeconds: assistantDur,
+          audioDuration: formatDuration(assistantDur),
         };
 
-        const finalHistory = [...updatedHistory, assistantMessage];
+        const finalHistory = [...currentHistory, assistantMessage];
         saveMessages(finalHistory);
 
-        if (autoSpeak) {
-          await speak(response.reply);
+        // Voice Input -> Speaks AI Voice audio with waveform
+        if (isVoiceInput && autoSpeak) {
+          await speak(response.reply, assistantId);
         } else {
           setStatus("idle");
         }
@@ -348,10 +423,15 @@ export function useVoiceAssistant(
       const index = messagesRef.current.findIndex((m) => m.id === messageId);
       if (index === -1) return;
 
+      const isVoice = messagesRef.current[index]?.isVoice ?? false;
+      const userDur = estimateDurationSeconds(trimmed);
       const updatedUserMsg: ChatMessage = {
         ...messagesRef.current[index],
         text: trimmed,
         timestamp: Date.now(),
+        isVoice,
+        audioDurationSeconds: userDur,
+        audioDuration: formatDuration(userDur),
       };
 
       const previousHistory = messagesRef.current.slice(0, index);
@@ -371,18 +451,23 @@ export function useVoiceAssistant(
           language: languageRef.current,
         });
 
+        const assistantDur = estimateDurationSeconds(response.reply);
+        const assistantId = `${Date.now()}-assistant`;
         const assistantMessage: ChatMessage = {
-          id: `${Date.now()}-assistant`,
+          id: assistantId,
           role: "assistant",
           text: response.reply,
           timestamp: Date.now(),
+          isVoice,
+          audioDurationSeconds: assistantDur,
+          audioDuration: formatDuration(assistantDur),
         };
 
         const finalHistory = [...newHistory, assistantMessage];
         await saveMessages(finalHistory);
 
-        if (autoSpeak) {
-          await speak(response.reply);
+        if (isVoice && autoSpeak) {
+          await speak(response.reply, assistantId);
         } else {
           setStatus("idle");
         }
@@ -421,10 +506,14 @@ export function useVoiceAssistant(
               encoding: "base64",
             });
 
-            await sendMessage(undefined, {
-              base64,
-              mimeType: "audio/m4a",
-            });
+            await sendMessage(
+              undefined,
+              {
+                base64,
+                mimeType: "audio/m4a",
+              },
+              true
+            );
             return;
           }
         }
@@ -572,7 +661,7 @@ export function useVoiceAssistant(
 
         const recognizedText = latestTranscriptRef.current.trim();
         if (hadActiveSession && recognizedText) {
-          sendMessage(recognizedText);
+          sendMessage(recognizedText, undefined, true);
         } else {
           setStatus((prev) => (prev === "listening" ? "idle" : prev));
         }
@@ -628,6 +717,9 @@ export function useVoiceAssistant(
     errorType,
     isSTTSupported,
     isTTSSupported,
+    currentlyPlayingId,
+    playbackProgress,
+    playbackElapsedSeconds,
     setLanguage,
     startListening,
     stopListening,

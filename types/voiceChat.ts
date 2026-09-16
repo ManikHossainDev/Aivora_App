@@ -7,6 +7,15 @@ export interface ChatMessage {
   role: "user" | "assistant";
   text: string;
   timestamp: number;
+  isVoice?: boolean;
+  audioDuration?: string;
+  audioDurationSeconds?: number;
+  audioUri?: string;
+  replyTo?: {
+    id: string;
+    role: "user" | "assistant";
+    text: string;
+  };
 }
 
 export type VoiceChatErrorType =

@@ -5,9 +5,10 @@ import { AIVORA_MODELS, AivoraModelOption, useModelStore } from "@/stores/modelS
 
 interface AivoraHeaderProps {
   subtitle?: string;
+  onNewChat?: () => void;
 }
 
-export function AivoraHeader({ subtitle }: AivoraHeaderProps) {
+export function AivoraHeader({ subtitle, onNewChat }: AivoraHeaderProps) {
   const selectedModel = useModelStore((state) => state.selectedModel);
   const setModel = useModelStore((state) => state.setModel);
   const [modalVisible, setModalVisible] = useState(false);
@@ -19,7 +20,16 @@ export function AivoraHeader({ subtitle }: AivoraHeaderProps) {
 
   return (
     <>
-      <View className="flex-row items-center justify-between bg-white px-4 py-3 shadow-sm">
+      <View
+        className="flex-row items-center justify-between border-b border-slate-100 bg-white px-4 py-3"
+        style={{
+          shadowColor: "#000",
+          shadowOffset: { width: 0, height: 2 },
+          shadowOpacity: 0.04,
+          shadowRadius: 3,
+          elevation: 2,
+        }}
+      >
         {/* Left: Branding */}
         <View className="flex-row items-center">
           <View className="mr-2.5 h-9 w-9 items-center justify-center rounded-xl bg-blue-600 shadow-sm">
@@ -36,18 +46,30 @@ export function AivoraHeader({ subtitle }: AivoraHeaderProps) {
           </View>
         </View>
 
-        {/* Right: Interactive Model Version Selector Pill */}
-        <TouchableOpacity
-          onPress={() => setModalVisible(true)}
-          className="h-9 flex-row items-center justify-center rounded-xl border border-blue-200 bg-blue-50/90 px-3 shadow-sm active:bg-blue-100"
-          hitSlop={{ top: 6, bottom: 6, left: 6, right: 6 }}
-        >
-          <Ionicons name="hardware-chip-outline" size={15} color="#2563eb" />
-          <Text className="mx-1.5 text-xs font-bold text-blue-700">
-            {selectedModel.shortName}
-          </Text>
-          <Ionicons name="chevron-down" size={13} color="#2563eb" />
-        </TouchableOpacity>
+        {/* Right: Model Version Selector & '+' New Chat Button */}
+        <View className="flex-row items-center gap-2">
+          <TouchableOpacity
+            onPress={() => setModalVisible(true)}
+            className="h-9 flex-row items-center justify-center rounded-xl border border-blue-200 bg-blue-50/90 px-3 shadow-sm active:bg-blue-100"
+            hitSlop={{ top: 6, bottom: 6, left: 6, right: 6 }}
+          >
+            <Ionicons name="hardware-chip-outline" size={15} color="#2563eb" />
+            <Text className="mx-1.5 text-xs font-bold text-blue-700">
+              {selectedModel.shortName}
+            </Text>
+            <Ionicons name="chevron-down" size={13} color="#2563eb" />
+          </TouchableOpacity>
+
+          {onNewChat && (
+            <TouchableOpacity
+              onPress={onNewChat}
+              className="h-9 w-9 items-center justify-center rounded-xl border border-slate-200 bg-slate-50 shadow-sm active:bg-blue-50"
+              hitSlop={{ top: 6, bottom: 6, left: 6, right: 6 }}
+            >
+              <Ionicons name="add" size={20} color="#334155" />
+            </TouchableOpacity>
+          )}
+        </View>
       </View>
 
       {/* Model Selection Modal */}

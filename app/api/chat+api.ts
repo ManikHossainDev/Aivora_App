@@ -9,13 +9,18 @@ interface RequestPayload {
   model?: string;
 }
 
-// Active models with fallback to prevent 503 Overloaded issues
+// Valid Google Gemini models with ultra-fast latency
 const GEMINI_MODELS = [
-  "gemini-3.6-flash",
-  "gemini-3.7-flash",
-  "gemini-3.8-flash",
-  "gemini-flash-latest",
+  "gemini-2.0-flash",
+  "gemini-1.5-flash",
+  "gemini-1.5-flash-8b",
 ];
+
+function resolveGeminiModel(requestedModel?: string): string[] {
+  // Map internal Aivora model IDs to the fastest Google Gemini endpoints
+  const primaryModel = "gemini-2.0-flash";
+  return [primaryModel, "gemini-1.5-flash", "gemini-1.5-flash-8b"];
+}
 
 export async function POST(request: Request): Promise<Response> {
   try {
@@ -105,10 +110,8 @@ export async function POST(request: Request): Promise<Response> {
     let lastError = "AI Service Unavailable";
     let lastStatus = 503;
 
-    // Prioritize user-selected model if provided, with automatic fallback
-    const modelsToTry = requestedModel
-      ? [requestedModel, ...GEMINI_MODELS.filter((m) => m !== requestedModel)]
-      : GEMINI_MODELS;
+    // Prioritize high-speed models with immediate fallback
+    const modelsToTry = resolveGeminiModel(requestedModel);
 
     // Try models with automatic fallback
     for (const model of modelsToTry) {
@@ -130,11 +133,17 @@ export async function POST(request: Request): Promise<Response> {
 
           if (audioBase64) {
             try {
-              const parsed = JSON.parse(rawText);
-              finalReply = parsed.reply || rawText;
-              finalTranscript = parsed.transcript || "";
+              let cleaned = rawText.replace(/```json/gi, "").replace(/```/g, "").trim();
+              const firstBrace = cleaned.indexOf("{");
+              const lastBrace = cleaned.lastIndexOf("}");
+              if (firstBrace !== -1 && lastBrace !== -1 && lastBrace > firstBrace) {
+                cleaned = cleaned.substring(firstBrace, lastBrace + 1);
+              }
+              const parsed = JSON.parse(cleaned);
+              finalReply = parsed.reply || parsed.response || parsed.answer || cleaned;
+              finalTranscript = parsed.transcript || parsed.transcription || parsed.userText || "";
             } catch {
-              finalReply = rawText;
+              finalReply = rawText.replace(/```json/gi, "").replace(/```/g, "").trim();
             }
           }
 
