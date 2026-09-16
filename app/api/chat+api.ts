@@ -6,6 +6,7 @@ interface RequestPayload {
   mimeType?: string;
   history?: ChatMessage[];
   language?: SupportedLanguage;
+  model?: string;
 }
 
 // Active models with fallback to prevent 503 Overloaded issues
@@ -33,7 +34,7 @@ export async function POST(request: Request): Promise<Response> {
     }
 
     const body = (await request.json()) as RequestPayload;
-    const { message, audioBase64, mimeType = "audio/m4a", history = [], language = "en-US" } = body;
+    const { message, audioBase64, mimeType = "audio/m4a", history = [], language = "en-US", model: requestedModel } = body;
 
     if ((!message || !message.trim()) && !audioBase64) {
       return new Response(
@@ -87,7 +88,7 @@ export async function POST(request: Request): Promise<Response> {
     }
 
     const systemInstructionText =
-      "Your name is Aivora. You are an intelligent, friendly, and highly capable AI voice assistant. Always communicate only in English. Never refer to yourself as Gemini or mention that you are created as Gemini. If the user asks for your name or identity, always state that you are Aivora. Keep your responses concise, conversational, clear, and optimized for voice playback.";
+      "Your name is Aivora. You are an intelligent, friendly, and highly capable AI voice assistant. Always communicate only in English. If the user asks for your name or identity, always state that you are Aivora. Keep your responses concise, conversational, clear, and optimized for voice playback.";
 
     const geminiPayload = {
       systemInstruction: {
@@ -101,11 +102,16 @@ export async function POST(request: Request): Promise<Response> {
       },
     };
 
-    let lastError = "Gemini Service Unavailable";
+    let lastError = "AI Service Unavailable";
     let lastStatus = 503;
 
+    // Prioritize user-selected model if provided, with automatic fallback
+    const modelsToTry = requestedModel
+      ? [requestedModel, ...GEMINI_MODELS.filter((m) => m !== requestedModel)]
+      : GEMINI_MODELS;
+
     // Try models with automatic fallback
-    for (const model of GEMINI_MODELS) {
+    for (const model of modelsToTry) {
       const url = `https://generativelanguage.googleapis.com/v1beta/models/${model}:generateContent?key=${apiKey}`;
       try {
         const geminiResponse = await fetch(url, {
@@ -161,13 +167,13 @@ export async function POST(request: Request): Promise<Response> {
           break;
         }
       } catch (err: unknown) {
-        lastError = err instanceof Error ? err.message : "Network error contacting Gemini";
+        lastError = err instanceof Error ? err.message : "Network error contacting AI server";
       }
     }
 
     return new Response(
       JSON.stringify({
-        error: `Gemini API error (${lastStatus}): ${lastError}`,
+        error: `AI Service Error (${lastStatus}): ${lastError}`,
       }),
       {
         status: lastStatus,

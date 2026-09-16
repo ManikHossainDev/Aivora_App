@@ -18,6 +18,7 @@ import { Ionicons } from "@expo/vector-icons";
 import * as Clipboard from "expo-clipboard";
 import { useVoiceAssistant } from "@/hooks/useVoiceAssistant";
 import { ChatMessage } from "@/types";
+import { AivoraHeader } from "@/components/AivoraHeader";
 
 // Suggestion Prompts for instant interaction
 const SUGGESTION_PROMPTS = [
@@ -198,22 +199,6 @@ export default function HomeScreen() {
     }
   };
 
-  const handleClearHistory = () => {
-    if (Platform.OS === "web") {
-      if (window.confirm("Clear all conversation history? Messages automatically expire after 24 hours.")) {
-        clearHistory();
-      }
-    } else {
-      Alert.alert(
-        "Clear Conversation",
-        "Are you sure you want to clear your conversation history? Note: All messages automatically expire after 24 hours.",
-        [
-          { text: "Cancel", style: "cancel" },
-          { text: "Clear All", style: "destructive", onPress: clearHistory },
-        ]
-      );
-    }
-  };
 
   const formatMessageTime = (timestamp?: number) => {
     if (!timestamp) return "";
@@ -407,39 +392,8 @@ export default function HomeScreen() {
         keyboardVerticalOffset={Platform.OS === "ios" ? 90 : 0}
         className="flex-1"
       >
-        {/* Top Header */}
-        <View className="flex-row items-center justify-between border-b border-slate-200 bg-white px-5 py-3.5 shadow-sm">
-          <View className="flex-row items-center">
-            <View className="mr-3 h-10 w-10 items-center justify-center rounded-full bg-blue-600 shadow-sm">
-              <Ionicons name="sparkles" size={20} color="#ffffff" />
-            </View>
-            <View>
-              <View className="flex-row items-center">
-                <Text className="text-xl font-bold tracking-tight text-slate-900">Aivora</Text>
-                <View className="ml-2 h-2 w-2 rounded-full bg-emerald-500" />
-              </View>
-              <Text className="text-xs font-medium text-slate-500">Aivora 3.6 Flash</Text>
-            </View>
-          </View>
-
-          {/* Controls: 24h Expiry Pill & Clear History */}
-          <View className="flex-row items-center gap-2">
-            <View className="flex-row items-center rounded-full border border-slate-200 bg-slate-50 px-2.5 py-1">
-              <Ionicons name="time-outline" size={12} color="#64748b" />
-              <Text className="ml-1 text-[11px] font-medium text-slate-600">24h Auto-Expiry</Text>
-            </View>
-
-            {messages.length > 0 && (
-              <TouchableOpacity
-                onPress={handleClearHistory}
-                className="rounded-full border border-slate-200 bg-slate-50 p-2 active:bg-rose-50"
-                hitSlop={{ top: 6, bottom: 6, left: 6, right: 6 }}
-              >
-                <Ionicons name="trash-outline" size={16} color="#64748b" />
-              </TouchableOpacity>
-            )}
-          </View>
-        </View>
+        {/* Top Header with Model Selector */}
+        <AivoraHeader />
 
         {/* Error Alert Box */}
         {error ? (
@@ -523,27 +477,20 @@ export default function HomeScreen() {
           </TouchableOpacity>
         )}
 
-        {/* Dedicated Live Voice Graph Waveform Animation (No Fake Text) */}
+        {/* Dedicated Live Voice Graph Waveform Animation (Centered, No Dot or Done Button) */}
         {(status === "listening" || status === "speaking") && (
-          <View className="mx-4 mb-2 overflow-hidden rounded-2xl border border-slate-200 bg-white px-4 py-3 shadow-md">
-            <View className="flex-row items-center justify-between">
-              <View className="flex-row items-center">
-                <View className={`mr-2.5 h-2.5 w-2.5 rounded-full ${statusInfo.badgeColor}`} />
-                <Text className="text-xs font-bold tracking-wide uppercase text-slate-700">
-                  {status === "listening" ? "Listening to Voice" : "Aivora Speaking"}
-                </Text>
-              </View>
-
+          <View className="mx-4 mb-2 overflow-hidden rounded-2xl border border-slate-200 bg-white px-5 py-3.5 shadow-md">
+            <View className="relative flex-row items-center justify-center">
               {/* 8-Bar Waveform Frequency Visualizer Graph */}
-              <View className="flex-row items-center gap-1">
+              <View className="flex-row items-center justify-center gap-1.5 py-1">
                 {[barAnim1, barAnim2, barAnim3, barAnim4, barAnim5, barAnim6, barAnim7, barAnim8].map(
                   (anim, i) => (
                     <Animated.View
                       key={i}
                       style={{
                         transform: [{ scaleY: anim }],
-                        height: 24,
-                        width: 3.5,
+                        height: 26,
+                        width: 4,
                         borderRadius: 3,
                         backgroundColor: waveBarColor,
                       }}
@@ -552,28 +499,20 @@ export default function HomeScreen() {
                 )}
               </View>
 
-              {status === "speaking" ? (
+              {status === "speaking" && (
                 <TouchableOpacity
                   onPress={stopSpeaking}
-                  className="flex-row items-center rounded-full bg-slate-100 px-3 py-1 active:bg-slate-200"
+                  className="absolute right-0 flex-row items-center rounded-full bg-slate-100 px-3 py-1 active:bg-slate-200"
                 >
                   <Ionicons name="stop-circle" size={14} color="#64748b" />
                   <Text className="ml-1 text-xs font-medium text-slate-700">Stop</Text>
-                </TouchableOpacity>
-              ) : (
-                <TouchableOpacity
-                  onPress={toggleListening}
-                  className="flex-row items-center rounded-full bg-emerald-50 px-3 py-1 active:bg-emerald-100"
-                >
-                  <Ionicons name="checkmark-circle" size={14} color="#059669" />
-                  <Text className="ml-1 text-xs font-bold text-emerald-700">Done</Text>
                 </TouchableOpacity>
               )}
             </View>
 
             {/* If user actual speech is recognized in real-time, show it cleanly */}
             {transcript && transcript.trim().length > 0 ? (
-              <Text className="mt-2 text-sm font-medium italic text-slate-800">
+              <Text className="mt-2 text-center text-sm font-medium italic text-slate-800">
                 "{transcript}"
               </Text>
             ) : null}
@@ -648,21 +587,18 @@ export default function HomeScreen() {
             </Animated.View>
           </View>
 
-          {/* Character counter / Hint */}
-          <View className="mt-1 flex-row items-center justify-between px-1">
-            {!isSTTSupported && Platform.OS === "web" ? (
+          {/* Character counter / Web Notice */}
+          {inputText.length > 0 ? (
+            <View className="mt-1 flex-row items-center justify-end px-1">
+              <Text className="text-[10px] text-slate-400">{inputText.length}/1000</Text>
+            </View>
+          ) : !isSTTSupported && Platform.OS === "web" ? (
+            <View className="mt-1 flex-row items-center justify-center px-1">
               <Text className="text-[11px] text-amber-600">
                 Speech recognition is best supported in Chrome / Edge.
               </Text>
-            ) : (
-              <Text className="text-[10px] text-slate-400">
-                Tap mic to speak or type your question • Tap ✏️ on message to edit
-              </Text>
-            )}
-            {inputText.length > 0 && (
-              <Text className="text-[10px] text-slate-400">{inputText.length}/1000</Text>
-            )}
-          </View>
+            </View>
+          ) : null}
         </View>
       </KeyboardAvoidingView>
     </SafeAreaView>

@@ -1,6 +1,7 @@
 import { Platform } from "react-native";
 import Constants from "expo-constants";
 import { ChatMessage, GeminiChatResponse, SupportedLanguage } from "@/types";
+import { useModelStore } from "@/stores/modelStore";
 
 export interface SendMessageOptions {
   message?: string;
@@ -8,6 +9,7 @@ export interface SendMessageOptions {
   mimeType?: string;
   history?: ChatMessage[];
   language?: SupportedLanguage;
+  model?: string;
 }
 
 function getApiUrl(): string {
@@ -36,8 +38,10 @@ export async function sendChatMessageToGemini({
   mimeType,
   history = [],
   language = "en-US",
+  model,
 }: SendMessageOptions): Promise<GeminiChatResponse> {
   try {
+    const activeModel = model || useModelStore.getState().selectedModel.id;
     const endpoint = getApiUrl();
     const response = await fetch(endpoint, {
       method: "POST",
@@ -50,6 +54,7 @@ export async function sendChatMessageToGemini({
         mimeType,
         history,
         language,
+        model: activeModel,
       }),
     });
 

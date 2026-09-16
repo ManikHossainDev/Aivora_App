@@ -3,15 +3,12 @@ import { Alert, Platform, ScrollView, Switch, Text, TouchableOpacity, View } fro
 import { SafeAreaView } from "react-native-safe-area-context";
 import { Ionicons } from "@expo/vector-icons";
 import AsyncStorage from "@react-native-async-storage/async-storage";
-import { useRouter } from "expo-router";
-import { useAuthStore } from "@/stores/authStore";
+import { AivoraHeader } from "@/components/AivoraHeader";
+import { useModelStore } from "@/stores/modelStore";
 
 export default function SettingsScreen() {
-  const router = useRouter();
-  const logout = useAuthStore((state) => state.logout);
-
+  const selectedModel = useModelStore((state) => state.selectedModel);
   const [autoSpeak, setAutoSpeak] = useState(true);
-  const [hapticFeedback, setHapticFeedback] = useState(true);
 
   const handleClearAllData = async () => {
     const doClear = async () => {
@@ -46,15 +43,13 @@ export default function SettingsScreen() {
     }
   };
 
-  const handleLogout = () => {
-    logout();
-    router.replace("/(auth)/login");
-  };
-
   return (
     <SafeAreaView edges={["top"]} className="flex-1 bg-slate-50">
+      {/* Top Universal Header with Model Selector */}
+      <AivoraHeader />
+
       <ScrollView className="flex-1 px-5 py-4">
-        {/* Header */}
+        {/* Page Title Header */}
         <View className="mb-6">
           <Text className="text-2xl font-bold tracking-tight text-slate-900">Settings</Text>
           <Text className="mt-0.5 text-xs text-slate-500">Configure your assistant preferences and privacy</Text>
@@ -101,7 +96,7 @@ export default function SettingsScreen() {
           </View>
         </View>
 
-        {/* Storage & Auto-Expiry Privacy */}
+        {/* Privacy & History Storage */}
         <View className="mb-5">
           <Text className="mb-2 text-xs font-semibold uppercase tracking-wider text-slate-400">
             Privacy & Storage
@@ -109,18 +104,18 @@ export default function SettingsScreen() {
           <View className="overflow-hidden rounded-2xl border border-slate-200 bg-white">
             <View className="flex-row items-center justify-between border-b border-slate-100 p-4">
               <View className="flex-row items-center flex-1 pr-3">
-                <View className="mr-3 h-9 w-9 items-center justify-center rounded-xl bg-amber-50">
-                  <Ionicons name="timer-outline" size={20} color="#d97706" />
+                <View className="mr-3 h-9 w-9 items-center justify-center rounded-xl bg-blue-50">
+                  <Ionicons name="shield-checkmark-outline" size={20} color="#2563eb" />
                 </View>
                 <View className="flex-1">
-                  <Text className="text-sm font-semibold text-slate-800">24-Hour Ephemeral Retention</Text>
+                  <Text className="text-sm font-semibold text-slate-800">Local Chat History</Text>
                   <Text className="text-xs text-slate-500">
-                    Conversations automatically purge after 24 hours
+                    Conversations are securely saved to your local storage
                   </Text>
                 </View>
               </View>
-              <View className="rounded-full bg-amber-100 px-2.5 py-1">
-                <Text className="text-[11px] font-semibold text-amber-800">Active</Text>
+              <View className="rounded-full bg-blue-50 px-2.5 py-1">
+                <Text className="text-[11px] font-semibold text-blue-700">Enabled</Text>
               </View>
             </View>
 
@@ -143,7 +138,7 @@ export default function SettingsScreen() {
         </View>
 
         {/* App Info */}
-        <View className="mb-6">
+        <View className="mb-8">
           <Text className="mb-2 text-xs font-semibold uppercase tracking-wider text-slate-400">
             About Aivora
           </Text>
@@ -154,19 +149,12 @@ export default function SettingsScreen() {
             </View>
             <View className="flex-row items-center justify-between pt-3">
               <Text className="text-xs text-slate-500">AI Intelligence Core</Text>
-              <Text className="text-xs font-semibold text-blue-600">Aivora 3.6 Flash Engine</Text>
+              <Text className="text-xs font-semibold text-blue-600">
+                {selectedModel.displayName} Engine
+              </Text>
             </View>
           </View>
         </View>
-
-        {/* Log out */}
-        <TouchableOpacity
-          onPress={handleLogout}
-          className="mb-8 flex-row items-center justify-center rounded-2xl border border-slate-300 bg-white py-3.5 shadow-sm active:bg-slate-100"
-        >
-          <Ionicons name="log-out-outline" size={18} color="#475569" />
-          <Text className="ml-2 text-sm font-semibold text-slate-700">Log out</Text>
-        </TouchableOpacity>
       </ScrollView>
     </SafeAreaView>
   );

@@ -13,16 +13,6 @@ import {
 import { sendChatMessageToGemini } from "@/services/geminiService";
 
 const STORAGE_KEY = "voice_assistant_history_v1";
-const TWENTY_FOUR_HOURS_MS = 24 * 60 * 60 * 1000; // 24 Hours in milliseconds
-
-// Automatically filter out messages older than 24 hours
-function filterValid24hMessages(msgs: ChatMessage[]): ChatMessage[] {
-  const now = Date.now();
-  return msgs.filter((msg) => {
-    if (!msg || typeof msg.timestamp !== "number") return false;
-    return now - msg.timestamp < TWENTY_FOUR_HOURS_MS;
-  });
-}
 
 // Safely resolve native modules using requireOptionalNativeModule to prevent fatal crashes
 function getSpeechModule(): any {
@@ -124,13 +114,12 @@ export function useVoiceAssistant(
     languageRef.current = language;
   }, [language]);
 
-  // Save messages with 24-hour auto-pruning to AsyncStorage & localStorage
+  // Save messages to persistent AsyncStorage & localStorage
   const saveMessages = useCallback(async (newMessages: ChatMessage[]) => {
-    const validMessages = filterValid24hMessages(newMessages);
-    setMessages(validMessages);
-    messagesRef.current = validMessages;
+    setMessages(newMessages);
+    messagesRef.current = newMessages;
 
-    const jsonStr = JSON.stringify(validMessages);
+    const jsonStr = JSON.stringify(newMessages);
     try {
       await AsyncStorage.setItem(STORAGE_KEY, jsonStr);
     } catch {
@@ -146,7 +135,7 @@ export function useVoiceAssistant(
     }
   }, []);
 
-  // 1. Initial Load & 24h Clean Storage
+  // 1. Initial Load Persistent Chat History
   useEffect(() => {
     if (Platform.OS === "web") {
       if (typeof window !== "undefined") {
@@ -162,7 +151,7 @@ export function useVoiceAssistant(
       setIsTTSSupported(true);
     }
 
-    // Load from storage and auto-prune any messages older than 24h
+    // Load from storage
     const loadStoredHistory = async () => {
       try {
         let stored = await AsyncStorage.getItem(STORAGE_KEY);
@@ -173,18 +162,8 @@ export function useVoiceAssistant(
         if (stored) {
           const parsed: ChatMessage[] = JSON.parse(stored);
           if (Array.isArray(parsed)) {
-            const valid = filterValid24hMessages(parsed);
-            setMessages(valid);
-            messagesRef.current = valid;
-
-            // If some messages were pruned (expired > 24h), save the clean list back
-            if (valid.length !== parsed.length) {
-              const updatedStr = JSON.stringify(valid);
-              await AsyncStorage.setItem(STORAGE_KEY, updatedStr);
-              if (typeof window !== "undefined" && typeof localStorage !== "undefined") {
-                localStorage.setItem(STORAGE_KEY, updatedStr);
-              }
-            }
+            setMessages(parsed);
+            messagesRef.current = parsed;
           }
         }
       } catch {
@@ -193,19 +172,7 @@ export function useVoiceAssistant(
     };
 
     loadStoredHistory();
-
-    // Periodic check every 60s to automatically prune expired messages (>24h) in real-time
-    const interval = setInterval(() => {
-      if (messagesRef.current.length > 0) {
-        const valid = filterValid24hMessages(messagesRef.current);
-        if (valid.length !== messagesRef.current.length) {
-          saveMessages(valid);
-        }
-      }
-    }, 60000);
-
-    return () => clearInterval(interval);
-  }, [saveMessages]);
+  }, []);
 
   const resetError = useCallback(() => {
     setError(null);

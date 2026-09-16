@@ -5,7 +5,7 @@
 </p>
 
 <p align="center">
-  <strong>A modern, responsive, and privacy-focused AI Voice Assistant mobile app built with Expo, React Native, NativeWind/Tailwind, and Google Generative AI Core.</strong>
+  <strong>A modern, responsive, and privacy-focused AI Voice Assistant mobile app built with Expo, React Native, NativeWind/Tailwind, and Aivora High-Speed Neural Core.</strong>
 </p>
 
 <p align="center">
@@ -13,7 +13,7 @@
   <a href="#how-it-works">How It Works</a> •
   <a href="#tech-stack">Tech Stack</a> •
   <a href="#project-structure">Project Structure</a> •
-  <a href="#privacy--24h-auto-expiry">Privacy</a>
+  <a href="#privacy--storage">Privacy</a>
 </p>
 
 ---
@@ -22,13 +22,13 @@
 
 ### 🎙️ 1. Intelligent Voice & Audio Interaction
 - **One-Tap Voice Input:** Speak naturally into your mobile microphone or browser.
-- **Dynamic 8-Bar Waveform Frequency Visualizer:** Real-time animated audio equalizer graph and pulsing aura during voice listening and speech output.
+- **Dynamic 8-Bar Waveform Frequency Visualizer:** Real-time animated audio equalizer graph during voice listening and speech output.
 - **Natural Voice Playback (TTS):** Automatic audio synthesis reading answers aloud.
 - **Voice Playback Controller:** Dedicated stop button to halt playback anytime.
 
-### ⏳ 2. 24-Hour Ephemeral Retention (Auto-Expiry)
-- **Automatic 24-Hour History Cleanup:** Every message has an exact timestamp. Messages older than 24 hours are automatically purged from local storage.
-- **Real-Time Periodic Pruning:** Automatic background cleanup timer maintains fresh local storage.
+### 🔒 2. Persistent Local Storage (100% On-Device Privacy)
+- **Persistent Conversation History:** Chat history is saved locally on your device with full persistence.
+- **On-Demand Cache Clearance:** Easily clear chat cache and history anytime from settings.
 - **Cross-Platform Storage:** Native `AsyncStorage` on iOS/Android and fallback `localStorage` on Web.
 
 ### ✏️ 3. Inline Message Editing & Re-Sending
@@ -41,7 +41,9 @@
 - **Audio Replay:** Re-play any previous AI response voice at any time.
 - **Timestamps:** Clean formatted message timestamps (*e.g., 11:24 AM*).
 
-### ⚙️ 5. Customizable Settings & Privacy Controls
+### ⚙️ 5. Universal AI Model Version Switcher & Controls
+- **Header Model Selector:** Instant model version switcher on the top right of the header across all screens.
+- **Selectable Intelligence Engines:** Choose between *Aivora 3.6 Flash* (Ultra Fast), *Aivora 3.7 Flash* (Smart & Balanced), *Aivora 3.8 Flash* (Deep Reasoning), and *Aivora Pro Latest* (State-of-the-Art).
 - **Auto-Speak Toggle:** Enable or disable automatic voice response playback.
 - **One-Tap Cache Clearance:** "Clear All Local Data" button to immediately wipe local conversation cache.
 - **Privacy Dashboard:** Overview of local storage retention and security status.
@@ -54,10 +56,10 @@
 flowchart LR
     A[User Voice / Text] --> B[Aivora Voice Engine]
     B --> C[API Route: /api/chat]
-    C --> D[Gemini Flash Core]
+    C --> D[Aivora 3.6 Flash Core]
     D --> E[Aivora Persona Response]
     E --> F[Voice Playback TTS]
-    E --> G[24h Local AsyncStorage]
+    E --> G[Local AsyncStorage]
 ```
 
 1. **Input Stage:** The user speaks via mobile microphone or types in the expandable multi-line text input.
@@ -65,7 +67,7 @@ flowchart LR
 3. **AI Core Processing:** Sent securely to `app/api/chat+api.ts` which communicates with the high-speed AI core.
 4. **Persona & Response:** The AI responds with natural conversational text adhering to the **Aivora** assistant persona.
 5. **Speech Synthesis:** If auto-speak is enabled, native Text-To-Speech (TTS) plays the voice response immediately.
-6. **Local Persistence:** The conversation is saved locally with a 24-hour expiration policy.
+6. **Local Persistence:** The conversation is stored locally in device storage with complete privacy.
 
 ---
 
@@ -74,7 +76,7 @@ flowchart LR
 - **Framework:** [Expo](https://expo.dev) (~v56) with [React Native](https://reactnative.dev) (v0.76+ / React 19)
 - **Routing:** [Expo Router](https://docs.expo.dev/router/introduction/) (File-based navigation with tabs and auth flow)
 - **Styling:** [NativeWind v4](https://www.nativewind.dev/) (Tailwind CSS for React Native)
-- **AI Core:** [Google Generative AI](https://ai.google.dev/) (High-speed Flash Models with fallback resilience)
+- **AI Core:** High-speed 3.6 Flash Neural Architecture with automatic model fallback resilience
 - **Audio & Speech:** `expo-audio`, `expo-speech`, `expo-file-system`
 - **State Management:** [Zustand](https://github.com/pmndrs/zustand)
 - **Storage:** `@react-native-async-storage/async-storage`
@@ -90,7 +92,7 @@ Aivora/
 │   ├── (auth)/                 # Authentication Flow (Login, Signup, Forgot Password)
 │   ├── (tabs)/                 # Bottom Tabs Navigation
 │   │   ├── home.tsx            # Main AI Voice Assistant Chat Screen
-│   │   ├── profile.tsx         # User Profile Screen
+│   │   ├── profile.tsx         # Aivora Assistant Hub & Capabilities Screen
 │   │   └── settings.tsx        # Settings & Privacy Screen
 │   ├── api/
 │   │   └── chat+api.ts         # Secure AI Backend Endpoint
@@ -101,7 +103,7 @@ Aivora/
 ├── constants/                  # Color palettes & Theme Tokens
 ├── contexts/                   # React Contexts (ThemeContext, etc.)
 ├── hooks/                      # Custom React Hooks
-│   └── useVoiceAssistant.ts    # Central Voice Recording, TTS, STT & 24h Storage Hook
+│   └── useVoiceAssistant.ts    # Central Voice Recording, TTS, STT & Persistent Storage Hook
 ├── locales/                    # Localization Files (en.json)
 ├── services/                   # API Clients & Service Handlers
 ├── stores/                     # Zustand Global Stores (authStore, etc.)
@@ -114,12 +116,12 @@ Aivora/
 
 ---
 
-## 🛡️ Privacy & 24-Hour Auto-Expiry
+## 🛡️ Privacy & Storage
 
 Aivora is designed with privacy at its core:
-- **No Remote Database Requirement:** Conversations are kept directly on the device using `AsyncStorage`.
-- **Ephemeral 24h Storage:** Messages older than 24 hours are automatically purged on app launch, saving, and background timer.
-- **Manual Data Wiping:** Users can clear all cached messages and credentials at any time with a single tap from the Settings menu.
+- **100% On-Device History:** Conversations are kept directly on the device using `AsyncStorage`.
+- **Persistent Local Storage:** Your chat conversations remain securely accessible on your device.
+- **Manual Data Wiping:** Users can clear all cached messages at any time with a single tap from the Settings menu.
 
 ---
 
